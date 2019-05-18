@@ -1,7 +1,14 @@
 package com.xomute.utils;
 
+import jdk.nashorn.internal.runtime.regexp.RegExpFactory;
+import jdk.nashorn.internal.runtime.regexp.RegExpMatcher;
+
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static com.xomute.utils.StringConstants.*;
 
 public class AssemblerHelper {
 
@@ -13,20 +20,7 @@ public class AssemblerHelper {
       Arrays.asList("SEGMENT", "ENDS", "MACRO", "ENDM", "END");
   public static final List<String> ONE_SYMBOL_LEXEMS = Arrays.asList(":", "]", "[", ",");
 
-  static final String COMMAND_STRING_ANALISE = "КОМАНДА";
-  static final String REFISTER_STRING_ANALISE = "РЕГІСТР 16-И РОЗРЯДНИЙ";
-  static final String SEGMENT_REGISTER_STRING_ANALISE = "СЕГМЕНТНИЙ РЕГІСТР";
-  static final String TEXT_CONSTANT_STRING_ANALISE = "ТЕКСТОВА КОНСТАНТА";
-  static final String SIX_CONSTANT_STRING_ANALISE = "ШІСТНАДЦЯТКОВА КОНСТАНТА";
-  static final String DIRECTIV_STRING_ANALISE = "ДИРЕКТИВА";
-  static final String IDENTIFICATOR_DATA_STRING_ANALISE = "ІДЕНТИФІКАТОР ДАНИХ";
-  static final String IDENTIFICATOR_USER_STRING_ANALISE = "ІДЕНТИФІКАТОР КОРИСТУВАЧА (ВИЗНАЧЕНИЙ)";
-  static final String ONE_SYMB_LEKSEMA_STRING_ANALISE = "ОДНОСИМВОЛЬНА ЛЕКСЕМА";
-  static final String IDENTIFICATOR_DONT_DEFINED_STRING_ANALISE =
-      "ІДЕНТИФІКАТОР КОРИСТУВАЧА (НЕ ВИЗНАЧЕНИЙ)";
-  static final String MACRO = "МАКРОС";
-
-  enum Type {
+  public enum Type {
     COMMAND,
     IDENTIFIER,
     REGISTER,
@@ -37,7 +31,34 @@ public class AssemblerHelper {
     DIRECTIVE,
     LABEL,
     MACRO_CALL,
-    NOT_DEFINED,
+    NOT_DEFINED;
+
+    public static String convertToString(Type type) {
+      switch (type) {
+        case COMMAND:
+          return COMMAND_STR;
+        case IDENTIFIER:
+          return DATA_IDENTIFIER_STR; // todo: replace me
+        case REGISTER:
+          return REGISTER_STR;
+        case BIN_CONSTANT:
+          return BIN_CONSTANT_STR;
+        case DEC_CONSTANT:
+          return DEC_CONSTANT_STR;
+        case HEX_CONSTANT:
+          return HEX_CONSTANT_STR;
+        case STRING_CONSTANT:
+          return TEXT_CONSTANT_STR;
+        case DIRECTIVE:
+          return DIRECTIVE_STR;
+        case LABEL:
+          return USER_DEFINED_IDENTIFIER_STR; // todo: replace me
+        case MACRO_CALL:
+          return MACRO_STR;
+        default:
+          return "ERROR";
+      }
+    }
   }
 
   enum Directive {
@@ -94,23 +115,61 @@ public class AssemblerHelper {
     } else return Type.NOT_DEFINED;
   }
 
-  private static boolean isCommand(String word) {}
+  private static boolean isCommand(String word) {
+    return Arrays.stream(CommandType.values())
+        .map(Enum::toString)
+        .collect(Collectors.toList())
+        .contains(word);
+  }
 
-  private static boolean isIdentifier(String word) {}
+  @Deprecated
+  private static boolean isIdentifier(String word) {
+    return false;
+  }
 
-  private static boolean isRegister(String word) {}
+  @Deprecated
+  private static boolean isRegister(String word) {
+    return false;
+  }
 
-  private static boolean isBinConstant(String word) {}
+  private static boolean isBinConstant(String word) {
+    return Pattern.matches("[01]+B", word);
+  }
 
-  private static boolean isDecConstant(String word) {}
+  private static boolean isDecConstant(String word) {
+    try {
+      Integer.valueOf(word);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
 
-  private static boolean isHexConstant(String word) {}
+  private static boolean isHexConstant(String word) {
+    if (Pattern.matches("[A-F]", "" + word.charAt(0))
+        || (Pattern.matches("[A-F]", "" + word.charAt(1)) && word.charAt(0) != '0')) {
+      return false;
+    }
+    return Pattern.matches("[0-9A-F]+H", word);
+  }
 
-  private static boolean isStringConstant(String word) {}
+  @Deprecated
+  private static boolean isStringConstant(String word) {
+    return false;
+  }
 
-  private static boolean isDirective(String word) {}
+  @Deprecated
+  private static boolean isDirective(String word) {
+    return false;
+  }
 
-  private static boolean isLabel(String word) {}
+  @Deprecated
+  private static boolean isLabel(String word) {
+    return false;
+  }
 
-  private static boolean isMacroCall(String word) {}
+  @Deprecated
+  private static boolean isMacroCall(String word) {
+    return false;
+  }
 }
