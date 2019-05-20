@@ -13,16 +13,17 @@ public class StringUtils {
 
     // check for String constant
     if (line.contains("\"")) {
-      splittedLine.add(line.split(" ")[0]);
-      splittedLine.add(line.split(" ")[1]);
+      splittedLine.add(line.split("\\s+")[0]);
+      splittedLine.add(line.split("\\s+")[1]);
       splittedLine.add(line.substring(line.indexOf("\"")));
     } else {
-      return splitByOneSymbLexems(
-          Arrays.stream(line.split(" "))
-              .filter(_line -> !_line.isEmpty())
-              .collect(Collectors.toList()));
+      splittedLine.addAll(
+          splitByOneSymbLexems(
+              Arrays.stream(line.split(" "))
+                  .filter(_line -> !_line.isEmpty())
+                  .collect(Collectors.toList())));
     }
-    return splittedLine;
+    return splittedLine.stream().map(String::trim).collect(Collectors.toList());
   }
 
   private static List<String> splitByOneSymbLexems(List<String> list) {
@@ -40,7 +41,7 @@ public class StringUtils {
   private static List<String> splitByLexem(String word) {
     List<String> splittedWord = new ArrayList<>();
     StringBuilder correctWord = new StringBuilder();
-    boolean isWord = true;
+    boolean isWord;
     for (char c : word.toCharArray()) {
       isWord = true;
       for (String lexem : AssemblerHelper.ONE_SYMBOL_LEXEMS) {

@@ -1,9 +1,12 @@
 package com.xomute.utils;
 
-import jdk.nashorn.internal.runtime.regexp.RegExpFactory;
-import jdk.nashorn.internal.runtime.regexp.RegExpMatcher;
+import com.sun.istack.internal.Nullable;
+import com.xomute.lexer.SourceLine;
+import com.xomute.lexer.lexems.Macro;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -12,35 +15,46 @@ import static com.xomute.utils.StringConstants.*;
 
 public class AssemblerHelper {
 
-  private static final List<String> definedIdentifierTypes = Arrays.asList("DB", "DW", "DD");
-  private static final List<String> definedRegisters =
+  private static final List<String> DATA_IDENTIFIERS = Arrays.asList("DB", "DW", "DD");
+  private static final List<String> REGISTERS =
       Arrays.asList("AX", "BX", "CX", "DX", "DI", "SI", "BP");
-  private static final List<String> definedSegmentRegisters = Arrays.asList("DS", "CS", "ES");
-  private static final List<String> definedDerectives =
+  private static final List<String> SEGMENT_REGISTERS = Arrays.asList("DS", "CS", "ES");
+  private static final List<String> DIRECTIVES =
       Arrays.asList("SEGMENT", "ENDS", "MACRO", "ENDM", "END");
-  public static final List<String> ONE_SYMBOL_LEXEMS = Arrays.asList(":", "]", "[", ",");
+  static final List<String> ONE_SYMBOL_LEXEMS = Arrays.asList(":", "]", "[", ",");
+
+  private static final List<String> USER_IDENTIFIERS = new ArrayList<>();
+  private static final List<Macro> MACRO_LIST = new ArrayList<>();
 
   public enum Type {
     COMMAND,
-    IDENTIFIER,
+    DATA_IDENTIFIER,
+    USER_IDENTIFIER,
     REGISTER,
+    SEGMENT_REGISTER,
+    ONE_SYMBOL_LEXEM,
     BIN_CONSTANT,
     DEC_CONSTANT,
     HEX_CONSTANT,
     STRING_CONSTANT,
     DIRECTIVE,
-    LABEL,
     MACRO_CALL,
     NOT_DEFINED;
 
     public static String convertToString(Type type) {
       switch (type) {
+        case ONE_SYMBOL_LEXEM:
+          return ONE_SYMBOL_LEXEM_STR;
         case COMMAND:
           return COMMAND_STR;
-        case IDENTIFIER:
-          return DATA_IDENTIFIER_STR; // todo: replace me
+        case USER_IDENTIFIER:
+          return USER_DEFINED_IDENTIFIER_STR;
+        case DATA_IDENTIFIER:
+          return DATA_IDENTIFIER_STR;
         case REGISTER:
           return REGISTER_STR;
+        case SEGMENT_REGISTER:
+          return SEGMENT_REGISTER_STR;
         case BIN_CONSTANT:
           return BIN_CONSTANT_STR;
         case DEC_CONSTANT:
@@ -51,23 +65,12 @@ public class AssemblerHelper {
           return TEXT_CONSTANT_STR;
         case DIRECTIVE:
           return DIRECTIVE_STR;
-        case LABEL:
-          return USER_DEFINED_IDENTIFIER_STR; // todo: replace me
         case MACRO_CALL:
           return MACRO_STR;
         default:
-          return "ERROR";
+          return USER_UNDEFINED_IDENTIFIER_STR;
       }
     }
-  }
-
-  enum Directive {
-    SEGMENT,
-    MACRO,
-    ENDM,
-    ENDS,
-    END,
-    WRONG_DERECTIVE
   }
 
   enum CommandType {
@@ -91,13 +94,40 @@ public class AssemblerHelper {
     return false;
   }
 
-  public static Type getType(String word) {
+  /**
+   * this method adds macro to macro list and removes it's name from identifiers list
+   *
+   * @param macro macro
+   */
+  public static void addMacro(Macro macro) {
+    MACRO_LIST.add(macro);
+    USER_IDENTIFIERS.remove(macro.getName());
+  }
+
+  public static List<SourceLine> callMacro(String name, @Nullable String param) {
+    for (Macro macro : MACRO_LIST) {
+      if (macro.getName().equals(name)) {
+        return macro.call(param);
+      }
+    }
+    System.out.println(
+        "SOME VERY BAD ERROR DELETE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    return Collections.emptyList();
+  }
+
+  public static Type processLexem(String word) {
     if (isCommand(word)) {
       return Type.COMMAND;
-    } else if (isIdentifier(word)) {
-      return Type.IDENTIFIER;
+    } else if (isUserIdentifier(word)) {
+      return Type.USER_IDENTIFIER;
+    } else if (isDataIdentifier(word)) {
+      return Type.DATA_IDENTIFIER;
     } else if (isRegister(word)) {
       return Type.REGISTER;
+    } else if (isSegmentRegister(word)) {
+      return Type.SEGMENT_REGISTER;
+    } else if (isOneSymbolLexem(word)) {
+      return Type.ONE_SYMBOL_LEXEM;
     } else if (isBinConstant(word)) {
       return Type.BIN_CONSTANT;
     } else if (isDecConstant(word)) {
@@ -108,11 +138,12 @@ public class AssemblerHelper {
       return Type.STRING_CONSTANT;
     } else if (isDirective(word)) {
       return Type.DIRECTIVE;
-    } else if (isLabel(word)) {
-      return Type.LABEL;
     } else if (isMacroCall(word)) {
       return Type.MACRO_CALL;
-    } else return Type.NOT_DEFINED;
+    } else {
+      USER_IDENTIFIERS.add(word);
+      return Type.NOT_DEFINED;
+    }
   }
 
   private static boolean isCommand(String word) {
@@ -122,14 +153,24 @@ public class AssemblerHelper {
         .contains(word);
   }
 
-  @Deprecated
-  private static boolean isIdentifier(String word) {
-    return false;
+  private static boolean isUserIdentifier(String word) {
+    return USER_IDENTIFIERS.contains(word);
   }
 
-  @Deprecated
+  private static boolean isDataIdentifier(String word) {
+    return DATA_IDENTIFIERS.contains(word);
+  }
+
   private static boolean isRegister(String word) {
-    return false;
+    return REGISTERS.contains(word);
+  }
+
+  private static boolean isSegmentRegister(String word) {
+    return SEGMENT_REGISTERS.contains(word);
+  }
+
+  private static boolean isOneSymbolLexem(String word) {
+    return ONE_SYMBOL_LEXEMS.contains(word);
   }
 
   private static boolean isBinConstant(String word) {
@@ -137,15 +178,11 @@ public class AssemblerHelper {
   }
 
   private static boolean isDecConstant(String word) {
-    try {
-      Integer.valueOf(word);
-      return true;
-    } catch (NumberFormatException e) {
-      return false;
-    }
+    return Pattern.matches("\\d+", word);
   }
 
   private static boolean isHexConstant(String word) {
+    if (word.length() < 2) return false;
     if (Pattern.matches("[A-F]", "" + word.charAt(0))
         || (Pattern.matches("[A-F]", "" + word.charAt(1)) && word.charAt(0) != '0')) {
       return false;
@@ -153,23 +190,16 @@ public class AssemblerHelper {
     return Pattern.matches("[0-9A-F]+H", word);
   }
 
-  @Deprecated
   private static boolean isStringConstant(String word) {
-    return false;
+    if (word.length() < 2) return false;
+    return word.charAt(0) == '\"' && word.charAt(word.length() - 1) == '\"';
   }
 
-  @Deprecated
   private static boolean isDirective(String word) {
-    return false;
+    return DIRECTIVES.contains(word);
   }
 
-  @Deprecated
-  private static boolean isLabel(String word) {
-    return false;
-  }
-
-  @Deprecated
-  private static boolean isMacroCall(String word) {
-    return false;
+  public static boolean isMacroCall(String word) {
+    return MACRO_LIST.stream().map(Macro::getName).anyMatch(macro -> macro.equals(word));
   }
 }

@@ -1,6 +1,9 @@
 package com.xomute.lexer;
 
+import com.xomute.utils.AssemblerHelper;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static com.xomute.utils.StringConstants.*;
 import static org.junit.Assert.*;
@@ -10,11 +13,40 @@ public class LexerTest {
   @Test
   public void scanOneLine() {
     Lexer lexer = new Lexer();
-    assertTrue(lexer.scanOneLine("NOT AX").contains("s"));
-    assertEquals("", lexer.scanOneLine("CMP  AX, DX"));
-    assertEquals("", lexer.scanOneLine("MOV  MYW1[BP], 0CH"));
-    assertEquals("", lexer.scanOneLine("M1:"));
-    assertEquals("", lexer.scanOneLine("MYMC2 DS:MYDW1[BP]"));
+    assertEquals(
+        Arrays.asList(AssemblerHelper.Type.COMMAND, AssemblerHelper.Type.REGISTER),
+        lexer.scanOneLine("NOT AX"));
+    assertEquals(
+        Arrays.asList(
+            AssemblerHelper.Type.COMMAND,
+            AssemblerHelper.Type.REGISTER,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM,
+            AssemblerHelper.Type.REGISTER),
+        lexer.scanOneLine("CMP  AX, DX"));
+    assertEquals(
+        Arrays.asList(
+            AssemblerHelper.Type.COMMAND,
+            AssemblerHelper.Type.NOT_DEFINED,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM,
+            AssemblerHelper.Type.REGISTER,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM,
+            AssemblerHelper.Type.HEX_CONSTANT),
+        lexer.scanOneLine("MOV  MYW1[BP], 0CH"));
+    assertEquals(
+        Arrays.asList(AssemblerHelper.Type.NOT_DEFINED,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM),
+        lexer.scanOneLine("M1:"));
+    assertEquals(
+        Arrays.asList(
+            AssemblerHelper.Type.MACRO_CALL,
+            AssemblerHelper.Type.SEGMENT_REGISTER,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM,
+            AssemblerHelper.Type.NOT_DEFINED,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM,
+            AssemblerHelper.Type.REGISTER,
+            AssemblerHelper.Type.ONE_SYMBOL_LEXEM),
+        lexer.scanOneLine("MYMC2 DS:MYDW1[BP]"));
   }
 
   @Test
@@ -40,6 +72,5 @@ public class LexerTest {
     assertEquals(ONE_SYMBOL_LEXEM_STR, lexer.scanOneWord("]"));
     assertEquals(ONE_SYMBOL_LEXEM_STR, lexer.scanOneWord(","));
     assertEquals(ONE_SYMBOL_LEXEM_STR, lexer.scanOneWord(":"));
-
   }
 }

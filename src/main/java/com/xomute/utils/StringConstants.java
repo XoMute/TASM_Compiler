@@ -15,5 +15,5 @@ public abstract class StringConstants {
 	public static final String USER_UNDEFINED_IDENTIFIER_STR = "ІДЕНТИФІКАТОР КОРИСТУВАЧА (НЕ ВИЗНАЧЕНИЙ)";
 	public static final String MACRO_STR = "МАКРОС";
 
-	public static final String LINE = "--------------------------------------------";
+	public static final String LINE = "------------------------------------------------------------------";
 }
