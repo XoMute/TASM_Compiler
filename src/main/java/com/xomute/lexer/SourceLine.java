@@ -1,9 +1,11 @@
 package com.xomute.lexer;
 
+import com.xomute.compiler.interfaces.Mnemocode;
 import com.xomute.utils.AssemblerHelper;
 import com.xomute.utils.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 public class SourceLine {
 
@@ -19,6 +21,9 @@ public class SourceLine {
 
   private int secondOperandIndex = -1;
   private int secondOperandLexemNumber = -1;
+
+  private String offset = "";
+  private String byteCode = "";
 
   public SourceLine(String line) {
     this.line = line;
@@ -104,4 +109,35 @@ public class SourceLine {
   public int getSecondOperandLexemNumber() {
     return secondOperandLexemNumber;
   }
+
+  public Optional<Mnemocode> getMnemocode() {
+    if (mnemocodeIndex != -1) {
+    	String strMnemocode = StringUtils.split(this.line).get(mnemocodeIndex);
+    	if (AssemblerHelper.isCommand(strMnemocode)) {
+
+				return Optional.ofNullable(AssemblerHelper.getCommand(strMnemocode));
+	    } else if (AssemblerHelper.isDataIdentifier(strMnemocode)) {
+    		return Optional.ofNullable(AssemblerHelper.getDataIdentifier(strMnemocode));
+	    } else {
+		    return Optional.ofNullable(AssemblerHelper.getDirective(strMnemocode));
+	    }
+    }
+    return Optional.empty();
+  }
+
+	public String getOffset() {
+		return offset;
+	}
+
+	public void setOffset(String offset) {
+		this.offset = offset;
+	}
+
+	public String getByteCode() {
+		return byteCode;
+	}
+
+	public void setByteCode(String byteCode) {
+		this.byteCode = byteCode;
+	}
 }

@@ -18,6 +18,8 @@ public class Syntaxer {
 		this.linesOfSrc = new ArrayList<>(linesOfSrc);
 	}
 
+	/////////////////// PRINTING PART ////////////////
+
 	/**
 	 * can pass null as parameter. In this case syntaxer will work with internal list of SourceLines
 	 * @param lines
@@ -32,8 +34,6 @@ public class Syntaxer {
 		}
 
 	}
-
-	/////////////////// PRINTING PART ////////////////
 
 	public void printLine(SourceLine line) {
     System.out.println("Синтаксичний аналіз:");

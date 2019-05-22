@@ -1,13 +1,19 @@
 package com.xomute.utils;
 
 import com.sun.istack.internal.Nullable;
+import com.xomute.compiler.interfaces.Command;
+import com.xomute.compiler.interfaces.DataIdentifier;
+import com.xomute.compiler.interfaces.Directive;
+import com.xomute.compiler.commands.*;
+import com.xomute.compiler.directives.ENDS;
+import com.xomute.compiler.directives.SEGMENT;
+import com.xomute.compiler.identifiers.DB;
+import com.xomute.compiler.identifiers.DD;
+import com.xomute.compiler.identifiers.DW;
 import com.xomute.lexer.SourceLine;
 import com.xomute.lexer.lexems.Macro;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -85,6 +91,53 @@ public class AssemblerHelper {
     WRONG_COMMAND
   }
 
+  public static Command getCommand(String mnemocode) {
+    switch (mnemocode) {
+      case "MOV":
+        return new MOV();
+      case "NOT":
+        return new NOT();
+      case "CBW":
+        return new CBW();
+      case "CMP":
+        return new CMP();
+      case "JBE":
+        return new JBE();
+      case "LSS":
+        return new LSS();
+      case "SBB":
+        return new SBB();
+      case "BTS":
+        return new BTS();
+      default:
+        return null;
+    }
+  }
+
+  public static DataIdentifier getDataIdentifier(String mnemocode) {
+    switch (mnemocode) {
+      case "DB":
+        return new DB();
+      case "DW":
+        return new DW();
+      case "DD":
+        return new DD();
+      default:
+        return null;
+    }
+  }
+
+  public static Directive getDirective(String mnemocode) {
+    switch (mnemocode) {
+      case "SEGMENT":
+        return new SEGMENT();
+      case "ENDS":
+        return new ENDS();
+      default:
+        return null;
+    }
+  }
+
   public static boolean containsOneSymbLexems(String line) {
     for (String lexem : ONE_SYMBOL_LEXEMS) {
       if (line.contains(lexem)) {
@@ -105,12 +158,7 @@ public class AssemblerHelper {
   }
 
   public static boolean isMnemocode(String mnemocode) {
-    return (DATA_IDENTIFIERS.contains(mnemocode)
-        || DIRECTIVES.contains(mnemocode)
-        || Arrays.stream(CommandType.values())
-            .map(Enum::toString)
-            .collect(Collectors.toList())
-            .contains(mnemocode));
+    return (isDataIdentifier(mnemocode) || isDirective(mnemocode) || isCommand(mnemocode));
   }
 
   /**
@@ -177,7 +225,7 @@ public class AssemblerHelper {
     }
   }
 
-  private static boolean isCommand(String word) {
+  public static boolean isCommand(String word) {
     return Arrays.stream(CommandType.values())
         .map(Enum::toString)
         .collect(Collectors.toList())
@@ -188,7 +236,7 @@ public class AssemblerHelper {
     return USER_IDENTIFIERS.contains(word);
   }
 
-  private static boolean isDataIdentifier(String word) {
+  public static boolean isDataIdentifier(String word) {
     return DATA_IDENTIFIERS.contains(word);
   }
 
