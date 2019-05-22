@@ -1,0 +1,56 @@
+.386
+DATA SEGMENT use16
+	STRING   DB    "Comm0nStr1ng with Numbers."
+	MYW1     DW    0AH
+	MYW2     DW    100101B
+	MYDW1    DW    190
+	MYDW2    DD	   02H
+
+DATA ENDS
+
+MYMC1 MACRO
+	NOT  BX
+ENDM
+
+MYMC2 MACRO STR
+	LSS DX, STR
+ENDM
+
+CODE SEGMENT use16
+
+	assume ds:data, cs:code
+
+	LOCA DW 5
+M2:
+
+	CBW
+
+	MOV  MYW1[BP], 0CH
+	MOV  DS:MYW1[DI], 0
+	MOV  CS:LOCA[SI], 6
+
+	NOT  AX
+
+	CMP  AX, DX
+
+	JBE  M1
+
+	SBB  MYDW1[BP], CX
+
+	LSS  DI, MYDW2[SI]
+
+	BTS AX, 5
+
+	CMP AX, DX
+
+	JBE M2
+
+	MYMC1
+
+M1:
+	MOV MYW2[DI], 0AAH
+
+	MYMC2 DS:MYDW2[BP]
+
+CODE ENDS
+END
