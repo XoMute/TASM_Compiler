@@ -94,6 +94,25 @@ public class AssemblerHelper {
     return false;
   }
 
+  public static boolean isName(String name) {
+    switch (processLexem(name, true)) {
+      case USER_IDENTIFIER:
+      case NOT_DEFINED:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  public static boolean isMnemocode(String mnemocode) {
+    return (DATA_IDENTIFIERS.contains(mnemocode)
+        || DIRECTIVES.contains(mnemocode)
+        || Arrays.stream(CommandType.values())
+            .map(Enum::toString)
+            .collect(Collectors.toList())
+            .contains(mnemocode));
+  }
+
   /**
    * this method adds macro to macro list and removes it's name from identifiers list
    *
@@ -115,33 +134,45 @@ public class AssemblerHelper {
     return Collections.emptyList();
   }
 
-  public static Type processLexem(String word) {
-    if (isCommand(word)) {
+  /** usage of some pattern (I forgot it's name) */
+  public static Type processLexem(String lexem) {
+    return processLexem(lexem, false);
+  }
+
+  /**
+   * @param lexem lexem to parse
+   * @param print if true, this method will act as pure function (no outer changes)
+   * @return type of lexem
+   */
+  public static Type processLexem(String lexem, boolean print) {
+    if (isCommand(lexem)) {
       return Type.COMMAND;
-    } else if (isUserIdentifier(word)) {
+    } else if (isUserIdentifier(lexem)) {
       return Type.USER_IDENTIFIER;
-    } else if (isDataIdentifier(word)) {
+    } else if (isDataIdentifier(lexem)) {
       return Type.DATA_IDENTIFIER;
-    } else if (isRegister(word)) {
+    } else if (isRegister(lexem)) {
       return Type.REGISTER;
-    } else if (isSegmentRegister(word)) {
+    } else if (isSegmentRegister(lexem)) {
       return Type.SEGMENT_REGISTER;
-    } else if (isOneSymbolLexem(word)) {
+    } else if (isOneSymbolLexem(lexem)) {
       return Type.ONE_SYMBOL_LEXEM;
-    } else if (isBinConstant(word)) {
+    } else if (isBinConstant(lexem)) {
       return Type.BIN_CONSTANT;
-    } else if (isDecConstant(word)) {
+    } else if (isDecConstant(lexem)) {
       return Type.DEC_CONSTANT;
-    } else if (isHexConstant(word)) {
+    } else if (isHexConstant(lexem)) {
       return Type.HEX_CONSTANT;
-    } else if (isStringConstant(word)) {
+    } else if (isStringConstant(lexem)) {
       return Type.STRING_CONSTANT;
-    } else if (isDirective(word)) {
+    } else if (isDirective(lexem)) {
       return Type.DIRECTIVE;
-    } else if (isMacroCall(word)) {
+    } else if (isMacroCall(lexem)) {
       return Type.MACRO_CALL;
     } else {
-      USER_IDENTIFIERS.add(word);
+      if (!print) {
+        USER_IDENTIFIERS.add(lexem);
+      }
       return Type.NOT_DEFINED;
     }
   }

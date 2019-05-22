@@ -13,9 +13,13 @@ public class StringUtils {
 
     // check for String constant
     if (line.contains("\"")) {
-      splittedLine.add(line.split("\\s+")[0]);
-      splittedLine.add(line.split("\\s+")[1]);
-      splittedLine.add(line.substring(line.indexOf("\"")));
+      if (line.indexOf("\"") == 0) {
+        splittedLine.add(line.substring(line.indexOf("\"")));
+      } else {
+        splittedLine.add(line.split("\\s+")[0]);
+        splittedLine.add(line.split("\\s+")[1]);
+        splittedLine.add(line.substring(line.indexOf("\"")));
+      }
     } else {
       splittedLine.addAll(
           splitByOneSymbLexems(
@@ -24,6 +28,14 @@ public class StringUtils {
                   .collect(Collectors.toList())));
     }
     return splittedLine.stream().map(String::trim).collect(Collectors.toList());
+  }
+
+  public static List<String> splitByOperands(String line) {
+    line = line.trim();
+    if (line.contains("\"")) {
+      return StringUtils.split(line);
+    }
+    return Arrays.asList(line.split(",?\\s+"));
   }
 
   private static List<String> splitByOneSymbLexems(List<String> list) {

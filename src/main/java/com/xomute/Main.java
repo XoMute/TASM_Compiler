@@ -5,15 +5,18 @@ import com.xomute.syntaxer.Syntaxer;
 import com.xomute.utils.Printer;
 
 public class Main {
+
+  private static final String filename = Main.class.getClassLoader().getResource("test.asm").getFile();
+
   public static void main(String[] args) {
 
     Lexer lexer = new Lexer();
-    lexer.scan(Main.class.getClassLoader().getResource("test.asm").getFile());
+//    lexer.print(filename);
 
     Syntaxer syntaxer = new Syntaxer();
 
     Printer printer = new Printer(lexer, syntaxer);
-    printer.printAll();
+    printer.doTheJob(filename);
 
       /**
         I have to finish lexer:

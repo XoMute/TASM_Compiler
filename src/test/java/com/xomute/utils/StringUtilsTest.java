@@ -19,4 +19,16 @@ public class StringUtilsTest {
     assertEquals(Arrays.asList("MOV", "MYW1", "[", "BP", "]", ",", "0CH"), StringUtils.split("MOV MYW1[BP], 0CH"));
     assertEquals(Arrays.asList("MYMC2", "DS", ":", "MYDW1", "[", "BP", "]"), StringUtils.split("MYMC2 DS:MYDW1[BP]"));
   }
+
+  @Test
+  public void splitByOperands() {
+    assertEquals(Arrays.asList("MOV", "AX", "BX"), StringUtils.splitByOperands("MOV  AX, BX"));
+    assertEquals(
+        Arrays.asList("STRING", "DB", "\"Some String Constant\""),
+        StringUtils.splitByOperands("STRING DB \"Some String Constant\""));
+    assertEquals(Arrays.asList("LSS", "DX", "STR"), StringUtils.splitByOperands("  LSS  DX,    STR"));
+    assertEquals(Arrays.asList("M2:"), StringUtils.splitByOperands("M2:     "));
+    assertEquals(Arrays.asList("MOV", "MYW1[BP]", "0CH"), StringUtils.splitByOperands("MOV MYW1[BP], 0CH"));
+    assertEquals(Arrays.asList("MYMC2", "DS:MYDW1[BP]"), StringUtils.splitByOperands("MYMC2 DS:MYDW1[BP]"));
+  }
 }
