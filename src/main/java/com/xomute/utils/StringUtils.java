@@ -77,4 +77,12 @@ public class StringUtils {
     }
     return splittedWord;
   }
+
+  public static String beautifyCode(String code, int size) {
+    StringBuilder strOffset = new StringBuilder(code);
+    while (strOffset.length() < size) {
+      strOffset.insert(0, "0");
+    }
+    return strOffset.toString().toUpperCase();
+  }
 }

@@ -22,8 +22,10 @@ import static com.xomute.utils.StringConstants.*;
 public class AssemblerHelper {
 
   private static final List<String> DATA_IDENTIFIERS = Arrays.asList("DB", "DW", "DD");
-  private static final List<String> REGISTERS =
-      Arrays.asList("AX", "BX", "CX", "DX", "DI", "SI", "BP");
+  private static final List<String> REGISTERS_16BIT =
+      Arrays.asList("AX", "BX", "CX", "DX", "DI", "SI", "BP", "SP");
+  private static final List<String> REGISTERS_8BIT =
+      Arrays.asList("AL", "AH", "BL", "BH", "CL", "CH", "DL", "DH");
   private static final List<String> SEGMENT_REGISTERS = Arrays.asList("DS", "CS", "ES");
   private static final List<String> DIRECTIVES =
       Arrays.asList("SEGMENT", "ENDS", "MACRO", "ENDM", "END");
@@ -32,11 +34,56 @@ public class AssemblerHelper {
   private static final List<String> USER_IDENTIFIERS = new ArrayList<>();
   private static final List<Macro> MACRO_LIST = new ArrayList<>();
 
+  private static Map<String, String> REG =
+      new HashMap<String, String>() {
+        {
+          put("AL", "000");
+          put("AX", "000");
+          put("CL", "001");
+          put("CX", "001");
+          put("DL", "010");
+          put("DX", "010");
+          put("BL", "011");
+          put("BX", "011");
+          put("AH", "100");
+          put("SP", "100");
+          put("CH", "101");
+          put("BP", "101");
+          put("DH", "110");
+          put("SI", "110");
+          put("BH", "111");
+          put("DI", "111");
+        }
+      };
+
+  private static Map<String, String> RM =
+      new HashMap<String, String>() {
+        {
+          put("AL", "000");
+          put("AX", "000");
+          put("CL", "001");
+          put("CX", "001");
+          put("DL", "010");
+          put("DX", "010");
+          put("BL", "011");
+          put("BX", "011");
+          put("AH", "100");
+          put("SP", "100");
+          put("CH", "101");
+          put("BP", "101");
+          put("DH", "110");
+          put("SI", "110");
+          put("BH", "111");
+          put("DI", "111");
+        }
+      };
+
   public enum Type {
     COMMAND,
     DATA_IDENTIFIER,
     USER_IDENTIFIER,
-    REGISTER,
+    REGISTER16,
+    REGISTER8,
     SEGMENT_REGISTER,
     ONE_SYMBOL_LEXEM,
     BIN_CONSTANT,
@@ -57,8 +104,10 @@ public class AssemblerHelper {
           return USER_DEFINED_IDENTIFIER_STR;
         case DATA_IDENTIFIER:
           return DATA_IDENTIFIER_STR;
-        case REGISTER:
-          return REGISTER_STR;
+        case REGISTER16:
+          return REGISTER16_STR;
+        case REGISTER8:
+          return REGISTER8_STR;
         case SEGMENT_REGISTER:
           return SEGMENT_REGISTER_STR;
         case BIN_CONSTANT:
@@ -91,16 +140,78 @@ public class AssemblerHelper {
     WRONG_COMMAND
   }
 
-  public static Command getCommand(String mnemocode) {
+  public static String getModRM(String reg, String rm) {
+    String modrm = getMod(rm);
+    modrm += REG.get(reg);
+    modrm += getRm(rm);
+    try {
+      return binToHex(modrm);
+    } catch (NumberFormatException ignored) {
+    }
+    return "ERRORinGetModRM";
+  }
+
+  private static String getMod(String rm) {
+    if (isImm16(rm)) {
+      return "00";
+    } else if (isRegister8(rm) || isRegister16(rm)) {
+      return "11";
+    } else return "ERRORinGetMod"; // todo: fix
+  }
+
+  private static String getRm(String rm) {
+    // todo: write it to the end
+    if (RM.get(rm) != null) {
+      return RM.get(rm);
+    } else {
+      if (isImm16(rm)) {
+        return "110";
+      }
+    }
+    return "ErrorInGetRM";
+  }
+
+  private static boolean isImm8(String number) {
+    try {
+      if (number.charAt(number.length() - 1) == 'H') {
+        number = number.substring(0, number.length() - 1);
+        return Long.parseLong(number, 16) < Math.pow(2, 8);
+      }
+      if (number.charAt(number.length() - 1) == 'B') {
+        return Long.parseLong(number, 2) < Math.pow(2, 8);
+      }
+      return Long.parseLong(number) < Math.pow(2, 8);
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  private static boolean isImm16(String number) {
+    try {
+      if (number.charAt(number.length() - 1) == 'H') {
+        number = number.substring(0, number.length() - 1);
+        return Long.parseLong(number, 16) < Integer.MAX_VALUE;
+      }
+      if (number.charAt(number.length() - 1) == 'B') {
+        return Long.parseLong(number, 2) < Integer.MAX_VALUE;
+      }
+      return Long.parseLong(number) < Integer.MAX_VALUE;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  public static Command getCommand(String mnemocode, String line) {
+    List<String> operands = StringUtils.splitByOperands(line);
     switch (mnemocode) {
       case "MOV":
-        return new MOV();
+        return new MOV(operands.get(1), operands.get(2));
       case "NOT":
-        return new NOT();
+        return new NOT(operands.get(1));
       case "CBW":
         return new CBW();
       case "CMP":
-        return new CMP();
+        return new CMP(operands.get(1), operands.get(2));
       case "JBE":
         return new JBE();
       case "LSS":
@@ -108,20 +219,21 @@ public class AssemblerHelper {
       case "SBB":
         return new SBB();
       case "BTS":
-        return new BTS();
+        return new BTS(operands.get(1), operands.get(2));
       default:
         return null;
     }
   }
 
-  public static DataIdentifier getDataIdentifier(String mnemocode) {
+  public static DataIdentifier getDataIdentifier(String mnemocode, String line) {
+    List<String> operands = StringUtils.splitByOperands(line);
     switch (mnemocode) {
       case "DB":
-        return new DB();
+        return new DB(operands.get(0), operands.get(2));
       case "DW":
-        return new DW();
+        return new DW(operands.get(0), operands.get(2));
       case "DD":
-        return new DD();
+        return new DD(operands.get(0), operands.get(2));
       default:
         return null;
     }
@@ -199,8 +311,10 @@ public class AssemblerHelper {
       return Type.USER_IDENTIFIER;
     } else if (isDataIdentifier(lexem)) {
       return Type.DATA_IDENTIFIER;
-    } else if (isRegister(lexem)) {
-      return Type.REGISTER;
+    } else if (isRegister16(lexem)) {
+      return Type.REGISTER16;
+    } else if (isRegister8(lexem)) {
+      return Type.REGISTER8;
     } else if (isSegmentRegister(lexem)) {
       return Type.SEGMENT_REGISTER;
     } else if (isOneSymbolLexem(lexem)) {
@@ -225,6 +339,16 @@ public class AssemblerHelper {
     }
   }
 
+  public static String binToHex(String bin) {
+    int dec = Integer.parseInt(bin, 2);
+    return Integer.toHexString(dec).toUpperCase();
+  }
+
+  public static String decToHex(String num) {
+    int dec = Integer.parseInt(num);
+    return Integer.toHexString(dec).toUpperCase();
+  }
+
   public static boolean isCommand(String word) {
     return Arrays.stream(CommandType.values())
         .map(Enum::toString)
@@ -240,8 +364,12 @@ public class AssemblerHelper {
     return DATA_IDENTIFIERS.contains(word);
   }
 
-  private static boolean isRegister(String word) {
-    return REGISTERS.contains(word);
+  public static boolean isRegister16(String word) {
+    return REGISTERS_16BIT.contains(word);
+  }
+
+  public static boolean isRegister8(String word) {
+    return REGISTERS_8BIT.contains(word);
   }
 
   private static boolean isSegmentRegister(String word) {
@@ -252,15 +380,15 @@ public class AssemblerHelper {
     return ONE_SYMBOL_LEXEMS.contains(word);
   }
 
-  private static boolean isBinConstant(String word) {
+  public static boolean isBinConstant(String word) {
     return Pattern.matches("[01]+B", word);
   }
 
-  private static boolean isDecConstant(String word) {
+  public static boolean isDecConstant(String word) {
     return Pattern.matches("\\d+", word);
   }
 
-  private static boolean isHexConstant(String word) {
+  public static boolean isHexConstant(String word) {
     if (word.length() < 2) return false;
     if (Pattern.matches("[A-F]", "" + word.charAt(0))
         || (Pattern.matches("[A-F]", "" + word.charAt(1)) && word.charAt(0) != '0')) {
@@ -269,7 +397,7 @@ public class AssemblerHelper {
     return Pattern.matches("[0-9A-F]+H", word);
   }
 
-  private static boolean isStringConstant(String word) {
+  public static boolean isStringConstant(String word) {
     if (word.length() < 2) return false;
     return word.charAt(0) == '\"' && word.charAt(word.length() - 1) == '\"';
   }

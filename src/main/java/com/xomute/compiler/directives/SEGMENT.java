@@ -4,7 +4,7 @@ import com.xomute.compiler.interfaces.Directive;
 
 @Deprecated
 public class SEGMENT implements Directive {
-	private String code;
+	private String code = "";
 	private int offset;
 
 	@Override

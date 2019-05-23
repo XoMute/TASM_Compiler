@@ -2,7 +2,8 @@ package com.xomute.utils;
 
 public abstract class StringConstants {
 	public static final String COMMAND_STR = "КОМАНДА";
-	public static final String REGISTER_STR = "РЕГІСТР 16-И РОЗРЯДНИЙ";
+	public static final String REGISTER16_STR = "РЕГІСТР 16-И РОЗРЯДНИЙ";
+	public static final String REGISTER8_STR = "РЕГІСТР 8-И РОЗРЯДНИЙ";
 	public static final String SEGMENT_REGISTER_STR = "СЕГМЕНТНИЙ РЕГІСТР";
 	public static final String TEXT_CONSTANT_STR = "ТЕКСТОВА КОНСТАНТА";
 	public static final String HEX_CONSTANT_STR = "ШІСТНАДЦЯТКОВА КОНСТАНТА";

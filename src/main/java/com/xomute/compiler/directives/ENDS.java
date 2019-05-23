@@ -4,8 +4,8 @@ import com.xomute.compiler.interfaces.Directive;
 
 @Deprecated
 public class ENDS implements Directive {
-	private String code;
-	private int offset;
+	private String code = "";
+	private int offset = -1;
 
 	@Override
 	public String getCode() {

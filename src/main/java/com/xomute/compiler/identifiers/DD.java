@@ -2,10 +2,18 @@ package com.xomute.compiler.identifiers;
 
 import com.xomute.compiler.interfaces.DataIdentifier;
 
-@Deprecated
-public class DD implements DataIdentifier {
-	private String code;
-	private int offset;
+public class DD extends DataIdentifier {
+	private int offset = 4;
+
+	public DD(String identifier, String value) {
+		super(identifier, value);
+		calculate();
+	}
+
+	protected void calculate() {
+  	super.calculate();
+		beautifyCode(8);
+	}
 
 	@Override
 	public String getCode() {

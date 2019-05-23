@@ -30,11 +30,20 @@ public class Lexer {
 
   public void scan(String filename) {
     FileScanner scanner = new FileScanner();
-    scanner.readFile(filename).stream()
-        .filter(line -> !line.isEmpty())
+    scanner
+        .readFile(filename)
         .forEach(
             line -> {
-              List<SourceLine> srcLines = scanOneLine(line);
+              List<SourceLine> srcLines =
+                  scanOneLine(line).stream()
+                      .map(
+                          srcLine -> {
+                            if (srcLine.getLine().isEmpty()) {
+                              srcLine.setSkipByCompiler(true);
+                            }
+                            return srcLine;
+                          })
+                      .collect(Collectors.toList());
               linesOfSrc.addAll(srcLines);
               //	            linesOfSrc.add(
               //                  new SourceLine(
@@ -44,34 +53,40 @@ public class Lexer {
   }
 
   public List<SourceLine> scanOneLine(String line) {
-    List<String> processedLine = processLine(line);
+    List<SourceLine> processedLine = processLine(line);
 
-    processedLine.forEach(
-        _line ->
-            StringUtils.split(_line).stream()
-                .map(AssemblerHelper::processLexem)
-                .collect(Collectors.toList()));
-    return processedLine.stream().map(SourceLine::new).collect(Collectors.toList());
+    processedLine.stream()
+        .map(SourceLine::getLine)
+        .forEach(
+            _line ->
+                StringUtils.split(_line).stream()
+                    .map(AssemblerHelper::processLexem)
+                    .collect(Collectors.toList()));
+    return processedLine;
   }
 
-  private List<String> processLine(String line) {
+  private List<SourceLine> processLine(String line) {
+    SourceLine srcLine = new SourceLine(line);
     if (line.contains("MACRO")) {
       startMacro(line);
-      return Collections.singletonList(line);
+      srcLine.setSkipByCompiler(true);
+      return Collections.singletonList(srcLine);
     } else if (line.contains("ENDM")) {
       endMacro();
-      return Collections.singletonList(line);
+      srcLine.setSkipByCompiler(true);
+      return Collections.singletonList(srcLine);
     } else if (line.contains("SEGMENT")) {
       startSegment(line);
-      return Collections.singletonList(line);
+      return Collections.singletonList(srcLine);
     } else if (line.contains("ENDS")) {
       endSegment(line);
-      return Collections.singletonList(line);
+      return Collections.singletonList(srcLine);
     }
 
     if (startedMacro) {
-      macro.addLine(new SourceLine(line));
-      return Collections.singletonList(line);
+      srcLine.setSkipByCompiler(true);
+      macro.addLine(srcLine);
+      return Collections.singletonList(srcLine);
     }
 
     if (startedSegment) {}
@@ -79,20 +94,17 @@ public class Lexer {
     List<String> splittedLine = Arrays.asList(line.split("\\s+"));
 
     if (AssemblerHelper.isMacroCall(splittedLine.get(0))) {
-      List<String> macroLines = new ArrayList<>();
-      macroLines.add(line);
+      List<SourceLine> macroLines = new ArrayList<>();
       String param = null;
       if (splittedLine.size() == 2) {
         param = splittedLine.get(1);
       }
-      macroLines.addAll(
-          AssemblerHelper.callMacro(splittedLine.get(0), param).stream()
-              .map(SourceLine::getLine)
-              .collect(Collectors.toList()));
+      // todo: maybe add srcLine.setSkip(true)
+      macroLines.addAll(AssemblerHelper.callMacro(splittedLine.get(0), param));
       return macroLines;
     }
 
-    return Collections.singletonList(line);
+    return Collections.singletonList(srcLine);
   }
 
   private void startMacro(String line) {
@@ -134,8 +146,7 @@ public class Lexer {
     processedLine.forEach(
         _line ->
             StringUtils.split(_line).stream()
-                .map(
-                    lexem -> AssemblerHelper.processLexem(lexem, true))
+                .map(lexem -> AssemblerHelper.processLexem(lexem, true))
                 .collect(Collectors.toList()));
     return processedLine.stream().map(SourceLine::new).collect(Collectors.toList());
   }

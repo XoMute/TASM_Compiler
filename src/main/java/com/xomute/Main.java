@@ -13,7 +13,6 @@ public class Main {
 
     Lexer lexer = new Lexer();
     lexer.scan(filename);
-//    lexer.print(filename);
 
     Syntaxer syntaxer = new Syntaxer();
 

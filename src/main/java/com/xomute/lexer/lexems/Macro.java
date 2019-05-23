@@ -44,13 +44,16 @@ public class Macro {
     if (param != null) {
       return body.stream()
           .map(SourceLine::getLine)
-          .map(line -> {
-          	if (Arrays.asList(line.split("\\s+")).contains(this.param)) {
-		          return line.replace(this.param, param);
-	          } else return line;
-          })
-          .map(SourceLine::new).collect(Collectors.toList());
+          .map(
+              line -> {
+                if (Arrays.asList(line.split("\\s+")).contains(this.param)) {
+                  return line.replace(this.param, param);
+                } else return line;
+              })
+          .map(SourceLine::new)
+          .collect(Collectors.toList());
     }
-    return body;
+    // needed for setting all 'skipByCompiler' to false
+    return body.stream().map(SourceLine::getLine).map(SourceLine::new).collect(Collectors.toList());
   }
 }

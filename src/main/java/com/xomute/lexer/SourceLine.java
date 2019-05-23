@@ -9,6 +9,9 @@ import java.util.Optional;
 
 public class SourceLine {
 
+  // flag to skip processing this line (in case of error or macro processing)
+  private boolean skipByCompiler = false;
+
   private String line;
 
   private int nameIndex = -1;
@@ -115,9 +118,9 @@ public class SourceLine {
     	String strMnemocode = StringUtils.split(this.line).get(mnemocodeIndex);
     	if (AssemblerHelper.isCommand(strMnemocode)) {
 
-				return Optional.ofNullable(AssemblerHelper.getCommand(strMnemocode));
+				return Optional.ofNullable(AssemblerHelper.getCommand(strMnemocode, this.line));
 	    } else if (AssemblerHelper.isDataIdentifier(strMnemocode)) {
-    		return Optional.ofNullable(AssemblerHelper.getDataIdentifier(strMnemocode));
+    		return Optional.ofNullable(AssemblerHelper.getDataIdentifier(strMnemocode, this.line));
 	    } else {
 		    return Optional.ofNullable(AssemblerHelper.getDirective(strMnemocode));
 	    }
@@ -134,10 +137,22 @@ public class SourceLine {
 	}
 
 	public String getByteCode() {
-		return byteCode;
+    if (skipByCompiler) {
+      return "";
+    }
+
+		Optional<Mnemocode> opt = getMnemocode();
+		if (opt.isPresent() ) {
+		  return opt.get().getCode();
+    }
+		return "";
 	}
 
-	public void setByteCode(String byteCode) {
-		this.byteCode = byteCode;
-	}
+  public boolean isSkipByCompiler() {
+    return skipByCompiler;
+  }
+
+  public void setSkipByCompiler(boolean skipByCompiler) {
+    this.skipByCompiler = skipByCompiler;
+  }
 }
