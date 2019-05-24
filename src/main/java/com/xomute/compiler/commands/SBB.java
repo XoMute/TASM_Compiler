@@ -4,7 +4,7 @@ import com.xomute.compiler.interfaces.Command;
 
 @Deprecated
 public class SBB implements Command {
-	private String code;
+	private String code = "";
 	private int offset;
 
 	@Override
@@ -15,5 +15,10 @@ public class SBB implements Command {
 	@Override
 	public int getOffset() {
 		return offset;
+	}
+
+	@Override
+	public void updateCode() {
+		// todo: implement
 	}
 }

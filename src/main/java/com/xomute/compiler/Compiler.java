@@ -1,8 +1,18 @@
 package com.xomute.compiler;
 
 import com.xomute.compiler.interfaces.Mnemocode;
+import com.xomute.compiler.utils.CompilerUtils;
 import com.xomute.lexer.SourceLine;
+import com.xomute.lexer.lexems.Label;
+import com.xomute.lexer.segments.CodeSegment;
+import com.xomute.lexer.segments.DataSegment;
+import com.xomute.lexer.segments.Segment;
+import com.xomute.utils.AssemblerHelper;
+import com.xomute.utils.StringConstants;
+import com.xomute.utils.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,14 +20,21 @@ public class Compiler {
 
   /**
    * TODO list for tomorrow:
-   *  - remember offset of label;
-   *  - implement JBE
+   *  - remember offset of label // DONE (?)
+   *  - implement JBE // DONE
    *  - figure out how to work with MOV (the hard and long one);
    *  - implement MOV
    *  - implement SBB (will be easy after MOV)
    *  - implement LSS (same)
    *  - chill;
    */
+
+  private static Segment currentSegment;
+  private boolean startedSegment;
+
+  private static int offset;
+
+  private List<SourceLine> srcLinesFor2ndGT = new ArrayList<>();
 
   public void compileToFile(List<SourceLine> srcLines) {
     compile(srcLines);
@@ -33,7 +50,7 @@ public class Compiler {
 
   private void compile(List<SourceLine> srcLines) {
     firstGoThrough(srcLines);
-    secondGoThrough(srcLines);
+    secondGoThrough();
   }
 
 
@@ -42,17 +59,23 @@ public class Compiler {
 
   /** this method adds offset in each SourceLine */
   private void firstGoThrough(List<SourceLine> srcLines) {
-    int offset = 0;
+    offset = 0;
     for (SourceLine srcLine : srcLines) {
       if (srcLine.isSkipByCompiler()) continue;
-      srcLine.setOffset(this.getOffset(offset));
+
+      srcLine.setOffset(CompilerUtils.getOffset(offset));
+
+      processSegment(srcLine);
 
       Optional<Mnemocode> opt = srcLine.getMnemocode();
-
       if (!opt.isPresent()) {
         continue;
       }
       Mnemocode mnemocode = opt.get();
+
+      if (mnemocode.getCode().equals(StringConstants.SECOND_GT)) {
+        this.addLineTo2ndGT(srcLine);
+      }
 
       if (mnemocode.getOffset() == -1) { // means this mnemocode is 'ENDS'
         offset = 0;
@@ -62,20 +85,68 @@ public class Compiler {
     }
   }
 
-  private String getOffset(int offset) {
-    StringBuilder strOffset = new StringBuilder(Integer.toHexString(offset));
-    while (strOffset.length() < 4) {
-      strOffset.insert(0, "0");
+  private void processSegment(SourceLine srcLine) {
+    String line = srcLine.getLine().trim();
+
+    if (line.contains("SEGMENT")) {
+      startSegment(line);
+    } else if (line.contains("ENDS")) {
+      endSegment(line);
     }
-    return strOffset.toString().toUpperCase();
+
+    if (startedSegment) {
+      if (AssemblerHelper.isLabel(line)) {
+        Label label = new Label(line.substring(0, line.length() - 1), srcLine.getOffset(), "CODE");
+        currentSegment.addLabel(label);
+      }
+    }
+  }
+
+  @Deprecated
+  private void startSegment(String line) {
+    List<String> operands = StringUtils.splitByOperands(line);
+    if (currentSegment == null) { // means it's first segment
+      currentSegment = new DataSegment(operands.get(0));
+    } else {
+      currentSegment = new CodeSegment(operands.get(0));
+    }
+    startedSegment = true;
+  }
+
+  @Deprecated
+  private void endSegment(String line) {
+    // todo: save current segment somewhere (or not??)
+    startedSegment = false;
+  }
+
+  public static Segment getCurrentSegment() {
+    return currentSegment;
+  }
+
+  public static int getOffset() {
+    return offset;
   }
 
   ///////////////////////////////////////////////////////////
 
   ///////////////// SECOND GO THROUGH ///////////////////////
 
+  public void addLineTo2ndGT(SourceLine line) {
+    srcLinesFor2ndGT.add(line);
+  }
+
   /** this method adds byteCode in each SourceLine */
-  private void secondGoThrough(List<SourceLine> srcLines) {}
+  private void secondGoThrough() {
+    for (SourceLine srcLine : srcLinesFor2ndGT) {
+      Optional<Mnemocode> opt = srcLine.getMnemocode();
+      if (!opt.isPresent()) {
+        continue;
+      }
+      Mnemocode mnemocode = opt.get();
+      // todo: update line offset if needed (in case of MOV, maybe)
+      mnemocode.updateCode();
+    }
+  }
 
   ///////////////////////////////////////////////////////////
 

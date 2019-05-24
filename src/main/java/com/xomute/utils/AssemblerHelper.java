@@ -213,7 +213,7 @@ public class AssemblerHelper {
       case "CMP":
         return new CMP(operands.get(1), operands.get(2));
       case "JBE":
-        return new JBE();
+        return new JBE(operands.get(1));
       case "LSS":
         return new LSS();
       case "SBB":
@@ -349,6 +349,18 @@ public class AssemblerHelper {
     return Integer.toHexString(dec).toUpperCase();
   }
 
+  public static String subHexFromHex(String mainHex, String subbedHex) {
+    int mainDec = Integer.parseInt(mainHex, 16);
+    int subbedDec = Integer.parseInt(subbedHex, 16);
+    return Integer.toHexString(mainDec - subbedDec).toUpperCase();
+  }
+
+  public static String addHexToHex(String hex1, String hex2) {
+    int hex1Dec = Integer.parseInt(hex1, 16);
+    int hex2Dec = Integer.parseInt(hex2, 16);
+    return Integer.toHexString(hex1Dec + hex2Dec).toUpperCase();
+  }
+
   public static boolean isCommand(String word) {
     return Arrays.stream(CommandType.values())
         .map(Enum::toString)
@@ -408,5 +420,9 @@ public class AssemblerHelper {
 
   public static boolean isMacroCall(String word) {
     return MACRO_LIST.stream().map(Macro::getName).anyMatch(macro -> macro.equals(word));
+  }
+
+  public static boolean isLabel(String line) {
+    return line.trim().endsWith(":");
   }
 }

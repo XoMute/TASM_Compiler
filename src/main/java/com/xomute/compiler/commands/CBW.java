@@ -16,4 +16,10 @@ public class CBW implements Command {
 	public int getOffset() {
 		return offset;
 	}
+
+	@Override
+	@Deprecated
+	public void updateCode() {
+
+	}
 }

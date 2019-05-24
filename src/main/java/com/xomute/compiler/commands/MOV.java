@@ -5,7 +5,7 @@ import com.xomute.utils.AssemblerHelper;
 
 @Deprecated
 public class MOV implements Command {
-	private String code;
+	private String code = "";
 	private int offset;
 
 	private String operand1;
@@ -33,5 +33,10 @@ public class MOV implements Command {
 	@Override
 	public int getOffset() {
 		return offset;
+	}
+
+	@Override
+	public void updateCode() {
+		// todo: implement
 	}
 }

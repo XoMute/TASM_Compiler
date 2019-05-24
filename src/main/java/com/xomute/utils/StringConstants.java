@@ -17,4 +17,8 @@ public abstract class StringConstants {
 	public static final String MACRO_STR = "МАКРОС";
 
 	public static final String LINE = "------------------------------------------------------------------";
+
+	public static final String SECOND_GT = "2NDGT";
+	public static final String NO_SUCH_LABEL = "NO SUCH LABEL";
+
 }

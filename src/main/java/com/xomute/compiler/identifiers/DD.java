@@ -24,4 +24,10 @@ public class DD extends DataIdentifier {
 	public int getOffset() {
 		return offset;
 	}
+
+	@Override
+	@Deprecated
+	public void updateCode() {
+
+	}
 }

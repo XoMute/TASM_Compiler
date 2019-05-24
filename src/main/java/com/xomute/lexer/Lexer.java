@@ -3,6 +3,7 @@ package com.xomute.lexer;
 import com.xomute.lexer.lexems.Macro;
 import com.xomute.lexer.segments.CodeSegment;
 import com.xomute.lexer.segments.DataSegment;
+import com.xomute.lexer.segments.Segment;
 import com.xomute.utils.AssemblerHelper;
 import com.xomute.utils.FileScanner;
 import com.xomute.utils.StringConstants;
@@ -16,8 +17,7 @@ import java.util.stream.Collectors;
 
 public class Lexer {
 
-  private CodeSegment codeSegment = new CodeSegment(); // todo: added them for the future
-  private DataSegment dataSegment = new DataSegment();
+  private Segment currentSegment;
   private Macro macro = new Macro();
   private boolean startedMacro;
   private boolean startedSegment;
@@ -75,12 +75,6 @@ public class Lexer {
       endMacro();
       srcLine.setSkipByCompiler(true);
       return Collections.singletonList(srcLine);
-    } else if (line.contains("SEGMENT")) {
-      startSegment(line);
-      return Collections.singletonList(srcLine);
-    } else if (line.contains("ENDS")) {
-      endSegment(line);
-      return Collections.singletonList(srcLine);
     }
 
     if (startedMacro) {
@@ -88,8 +82,6 @@ public class Lexer {
       macro.addLine(srcLine);
       return Collections.singletonList(srcLine);
     }
-
-    if (startedSegment) {}
 
     List<String> splittedLine = Arrays.asList(line.split("\\s+"));
 
@@ -99,7 +91,6 @@ public class Lexer {
       if (splittedLine.size() == 2) {
         param = splittedLine.get(1);
       }
-      // todo: maybe add srcLine.setSkip(true)
       macroLines.addAll(AssemblerHelper.callMacro(splittedLine.get(0), param));
       return macroLines;
     }
@@ -121,12 +112,6 @@ public class Lexer {
     AssemblerHelper.addMacro(macro);
     startedMacro = false;
   }
-
-  @Deprecated
-  private void startSegment(String line) {}
-
-  @Deprecated
-  private void endSegment(String line) {}
 
   ////////////////// PRINTING PART /////////////////////////////////
 

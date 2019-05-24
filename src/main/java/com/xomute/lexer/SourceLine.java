@@ -12,6 +12,8 @@ public class SourceLine {
   // flag to skip processing this line (in case of error or macro processing)
   private boolean skipByCompiler = false;
 
+  private Mnemocode mnemocode;
+
   private String line;
 
   private int nameIndex = -1;
@@ -114,18 +116,17 @@ public class SourceLine {
   }
 
   public Optional<Mnemocode> getMnemocode() {
-    if (mnemocodeIndex != -1) {
+    if (mnemocodeIndex != -1 && mnemocode == null) {
     	String strMnemocode = StringUtils.split(this.line).get(mnemocodeIndex);
     	if (AssemblerHelper.isCommand(strMnemocode)) {
-
-				return Optional.ofNullable(AssemblerHelper.getCommand(strMnemocode, this.line));
+				this.mnemocode = AssemblerHelper.getCommand(strMnemocode, this.line);
 	    } else if (AssemblerHelper.isDataIdentifier(strMnemocode)) {
-    		return Optional.ofNullable(AssemblerHelper.getDataIdentifier(strMnemocode, this.line));
+        this.mnemocode = AssemblerHelper.getDataIdentifier(strMnemocode, this.line);
 	    } else {
-		    return Optional.ofNullable(AssemblerHelper.getDirective(strMnemocode));
+        this.mnemocode = AssemblerHelper.getDirective(strMnemocode);
 	    }
     }
-    return Optional.empty();
+    return Optional.ofNullable(this.mnemocode);
   }
 
 	public String getOffset() {
@@ -142,7 +143,7 @@ public class SourceLine {
     }
 
 		Optional<Mnemocode> opt = getMnemocode();
-		if (opt.isPresent() ) {
+		if (opt.isPresent()) {
 		  return opt.get().getCode();
     }
 		return "";

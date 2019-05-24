@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NOT implements Command {
-  private String code;
+  private String code = "";
   private int offset = 2;
 
   private String operand;
@@ -33,5 +33,11 @@ public class NOT implements Command {
   @Override
   public int getOffset() {
     return offset;
+  }
+
+  @Override
+  @Deprecated
+  public void updateCode() {
+
   }
 }

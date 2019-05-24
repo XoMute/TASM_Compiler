@@ -6,7 +6,7 @@ import com.xomute.utils.StringUtils;
 
 public class BTS implements Command {
 
-	private String code;
+	private String code = "";
 	private int offset;
 
 	private String operand1;
@@ -28,5 +28,11 @@ public class BTS implements Command {
 	@Override
 	public int getOffset() {
 		return offset;
+	}
+
+	@Override
+	@Deprecated
+	public void updateCode() {
+
 	}
 }

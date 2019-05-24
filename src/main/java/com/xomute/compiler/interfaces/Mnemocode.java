@@ -5,4 +5,6 @@ public interface Mnemocode {
 	String getCode(); // in hexadecimal
 
 	int getOffset();
+
+	void updateCode();
 }

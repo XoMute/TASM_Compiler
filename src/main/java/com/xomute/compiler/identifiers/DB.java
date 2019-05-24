@@ -28,4 +28,10 @@ public class DB extends DataIdentifier {
 		}
 		return code.toString();
 	}
+
+	@Override
+	@Deprecated
+	public void updateCode() {
+
+	}
 }

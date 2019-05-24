@@ -16,4 +16,10 @@ public class ENDS implements Directive {
 	public int getOffset() {
 		return offset;
 	}
+
+	@Override
+	@Deprecated
+	public void updateCode() {
+
+	}
 }

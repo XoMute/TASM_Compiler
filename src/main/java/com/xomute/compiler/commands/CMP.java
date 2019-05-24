@@ -4,7 +4,7 @@ import com.xomute.compiler.interfaces.Command;
 import com.xomute.utils.AssemblerHelper;
 
 public class CMP implements Command {
-	private String code;
+	private String code = "";
 	private int offset = 2;
 
 	private String operand1;
@@ -32,5 +32,11 @@ public class CMP implements Command {
 	@Override
 	public int getOffset() {
 		return offset;
+	}
+
+	@Override
+	@Deprecated
+	public void updateCode() {
+
 	}
 }
