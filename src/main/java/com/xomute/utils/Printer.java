@@ -13,9 +13,9 @@ public class Printer {
 	private Lexer lexer;
 	private Syntaxer syntaxer;
 
-	public Printer(Lexer lexer, Syntaxer syntaxer) {
-		this.lexer = lexer;
-		this.syntaxer = syntaxer;
+	public Printer() {
+		this.lexer = new Lexer();
+		this.syntaxer = new Syntaxer();
 	}
 
 	public void doTheJob(String filename) {

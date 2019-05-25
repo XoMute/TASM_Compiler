@@ -2,7 +2,6 @@ package com.xomute.compiler.directives;
 
 import com.xomute.compiler.interfaces.Directive;
 
-@Deprecated
 public class ENDS implements Directive {
 	private String code = "";
 	private int offset = -1;

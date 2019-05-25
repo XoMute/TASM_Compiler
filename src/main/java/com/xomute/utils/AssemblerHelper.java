@@ -1,17 +1,20 @@
 package com.xomute.utils;
 
 import com.sun.istack.internal.Nullable;
-import com.xomute.compiler.interfaces.Command;
-import com.xomute.compiler.interfaces.DataIdentifier;
-import com.xomute.compiler.interfaces.Directive;
+import com.xomute.compiler.Compiler;
 import com.xomute.compiler.commands.*;
 import com.xomute.compiler.directives.ENDS;
 import com.xomute.compiler.directives.SEGMENT;
 import com.xomute.compiler.identifiers.DB;
 import com.xomute.compiler.identifiers.DD;
 import com.xomute.compiler.identifiers.DW;
+import com.xomute.compiler.interfaces.Command;
+import com.xomute.compiler.interfaces.DataIdentifier;
+import com.xomute.compiler.interfaces.Directive;
 import com.xomute.lexer.SourceLine;
+import com.xomute.lexer.lexems.Identifier;
 import com.xomute.lexer.lexems.Macro;
+import com.xomute.lexer.segments.Segment;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -33,6 +36,8 @@ public class AssemblerHelper {
 
   private static final List<String> USER_IDENTIFIERS = new ArrayList<>();
   private static final List<Macro> MACRO_LIST = new ArrayList<>();
+
+  private static final List<Segment> SEGMENTS = new ArrayList<>();
 
   private static Map<String, String> REG =
       new HashMap<String, String>() {
@@ -140,6 +145,12 @@ public class AssemblerHelper {
     WRONG_COMMAND
   }
 
+  public static boolean isWrongCommand(String command) {
+    return Arrays.stream(CommandType.values())
+        .map(Enum::toString)
+        .anyMatch(_command -> _command.equals(command));
+  }
+
   public static String getModRM(String reg, String rm) {
     String modrm = getMod(rm);
     modrm += REG.get(reg);
@@ -156,7 +167,11 @@ public class AssemblerHelper {
       return "00";
     } else if (isRegister8(rm) || isRegister16(rm)) {
       return "11";
-    } else return "ERRORinGetMod"; // todo: fix
+    } else if (isEffectiveAddress(rm)) {
+      return "10";
+    } else {
+      return "ERRORinGetMod"; // todo: fix
+    }
   }
 
   private static String getRm(String rm) {
@@ -164,11 +179,105 @@ public class AssemblerHelper {
     if (RM.get(rm) != null) {
       return RM.get(rm);
     } else {
+      if (isEffectiveAddress(rm)) {
+        if (isBX(rm)) {
+          return "111";
+        }
+
+        if (isBP(rm)) {
+          return "110";
+        }
+
+        if (isSI(rm)) {
+          return "100";
+        }
+
+        if (isDI(rm)) {
+          return "101";
+        }
+      }
+
       if (isImm16(rm)) {
         return "110";
       }
     }
     return "ErrorInGetRM";
+  }
+
+  private static boolean isEffectiveAddress(String ea) {
+    return ea.contains("[");
+  }
+
+  private static boolean isBX(String rm) {
+    return rm.substring(rm.indexOf("[") + 1, rm.indexOf("]")).equals("BX");
+  }
+
+  private static boolean isBP(String rm) {
+    return rm.substring(rm.indexOf("[") + 1, rm.indexOf("]")).equals("BP");
+  }
+
+  private static boolean isSI(String rm) {
+    return rm.substring(rm.indexOf("[") + 1, rm.indexOf("]")).equals("SI");
+  }
+
+  private static boolean isDI(String rm) {
+    return rm.substring(rm.indexOf("[") + 1, rm.indexOf("]")).equals("DI");
+  }
+
+  public static boolean isIdentifier16(String operand) {
+    operand = getIdentifierNameFromOperand(operand);
+
+    return getIdentifier(operand).map(Identifier::isHex).orElse(false);
+  }
+
+  public static String getIdentifierNameFromOperand(String operand) {
+    if (operand.contains(":")) {
+      operand = operand.substring(operand.indexOf(":") + 1);
+    }
+    operand = operand.substring(0, operand.indexOf("["));
+    return operand;
+  }
+
+  public static String getPrefix(String operand) {
+    String prefix = "";
+    String identifierName = getIdentifierNameFromOperand(operand);
+    if (operand.contains(":")) {
+      if (getIdentifierSegment(identifierName).equals("CS")) {
+        prefix = "2E: ";
+      } else {
+        if (isBP(operand)) {
+          prefix = "3E: ";
+        }
+      }
+    } else {
+      if (getIdentifierSegment(identifierName).equals("CS")) {
+        prefix = "2E: ";
+      } else {
+        if (isBP(operand)) {
+          prefix = "3E: ";
+        }
+      }
+    }
+    return prefix;
+  }
+
+  public static Optional<Identifier> getIdentifier(String identifierName) {
+    for (Segment segment : SEGMENTS) {
+      if (segment.hasIdentifier(identifierName)) {
+        return segment.getIdentifier(identifierName);
+      }
+    }
+    if (Compiler.getCurrentSegment().hasIdentifier(identifierName)) {
+      return Compiler.getCurrentSegment().getIdentifier(identifierName);
+    }
+
+    return Optional.empty();
+  }
+
+  public static String getIdentifierSegment(String identifierName) {
+    if (SEGMENTS.get(0).hasIdentifier(identifierName)) {
+      return "DS";
+    } else return "CS";
   }
 
   private static boolean isImm8(String number) {
@@ -215,27 +324,37 @@ public class AssemblerHelper {
       case "JBE":
         return new JBE(operands.get(1));
       case "LSS":
-        return new LSS();
+        return new LSS(operands.get(1), operands.get(2));
       case "SBB":
-        return new SBB();
+        return new SBB(operands.get(1), operands.get(2));
       case "BTS":
         return new BTS(operands.get(1), operands.get(2));
       default:
-        return null;
+        return new WrongCommand();
     }
   }
 
   public static DataIdentifier getDataIdentifier(String mnemocode, String line) {
     List<String> operands = StringUtils.splitByOperands(line);
+    Identifier identifier = new Identifier();
+    identifier.setName(operands.get(0));
+    identifier.setOffset(Compiler.getOffset());
+
     switch (mnemocode) {
       case "DB":
+        identifier.setHex(false);
+        Compiler.getCurrentSegment().addIdentifier(identifier);
         return new DB(operands.get(0), operands.get(2));
       case "DW":
+        identifier.setHex(true);
+        Compiler.getCurrentSegment().addIdentifier(identifier);
         return new DW(operands.get(0), operands.get(2));
       case "DD":
+        identifier.setHex(true);
+        Compiler.getCurrentSegment().addIdentifier(identifier);
         return new DD(operands.get(0), operands.get(2));
       default:
-        return null;
+        return null; // unreachable
     }
   }
 
@@ -292,6 +411,10 @@ public class AssemblerHelper {
     System.out.println(
         "SOME VERY BAD ERROR DELETE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     return Collections.emptyList();
+  }
+
+  public static void saveSegment(Segment segment) {
+    SEGMENTS.add(segment);
   }
 
   /** usage of some pattern (I forgot it's name) */
@@ -384,7 +507,7 @@ public class AssemblerHelper {
     return REGISTERS_8BIT.contains(word);
   }
 
-  private static boolean isSegmentRegister(String word) {
+  public static boolean isSegmentRegister(String word) {
     return SEGMENT_REGISTERS.contains(word);
   }
 
@@ -414,7 +537,7 @@ public class AssemblerHelper {
     return word.charAt(0) == '\"' && word.charAt(word.length() - 1) == '\"';
   }
 
-  private static boolean isDirective(String word) {
+  public static boolean isDirective(String word) {
     return DIRECTIVES.contains(word);
   }
 

@@ -11,6 +11,11 @@ public class Main {
 
   public static void main(String[] args) {
 
+    startCompiler();
+//    printLexerAndSyntaxer();
+  }
+
+  private static void startCompiler() {
     Lexer lexer = new Lexer();
     lexer.scan(filename);
 
@@ -18,8 +23,10 @@ public class Main {
 
     Compiler compiler = new Compiler();
     compiler.compileToConsole(lexer.getLinesOfSrc());
+  }
 
-//    Printer printer = new Printer(lexer, syntaxer);
-//    printer.doTheJob(filename);
+  private static void printLexerAndSyntaxer() {
+    Printer printer = new Printer();
+    printer.doTheJob(filename);
   }
 }

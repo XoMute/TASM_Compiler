@@ -1,14 +1,16 @@
 package com.xomute.lexer.segments;
 
+import com.xomute.lexer.lexems.Identifier;
 import com.xomute.lexer.lexems.Label;
 import com.xomute.utils.StringConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class CodeSegment implements Segment{
 
-	List<String> USER_IDENTIFIERS = new ArrayList<>();
+	List<Identifier> userIdentifiers = new ArrayList<>();
 
 	private String name;
 
@@ -29,8 +31,8 @@ public class CodeSegment implements Segment{
 	}
 
 	@Override
-	public void addIdentifier(String identifier) {
-		USER_IDENTIFIERS.add(identifier);
+	public void addIdentifier(Identifier identifier) {
+		userIdentifiers.add(identifier);
 	}
 
 	@Override
@@ -46,5 +48,29 @@ public class CodeSegment implements Segment{
 			}
 		}
 		return StringConstants.NO_SUCH_LABEL;
+	}
+
+	@Override
+	public boolean hasIdentifier(String identifierName) {
+		for(Identifier identifier : userIdentifiers) {
+			if (identifier.getName().equals(identifierName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public Optional<Identifier> getIdentifier(String identifierName) {
+		if (!hasIdentifier(identifierName)) {
+			return Optional.empty();
+		}
+
+		for(Identifier identifier : userIdentifiers) {
+			if (identifier.getName().equals(identifierName)) {
+				return Optional.of(identifier);
+			}
+		}
+		return Optional.empty();
 	}
 }

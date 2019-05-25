@@ -1,6 +1,9 @@
 package com.xomute.lexer.segments;
 
+import com.xomute.lexer.lexems.Identifier;
 import com.xomute.lexer.lexems.Label;
+
+import java.util.Optional;
 
 public interface Segment {
 
@@ -8,7 +11,11 @@ public interface Segment {
 
 	String getName();
 
-	void addIdentifier(String identifier);
+	void addIdentifier(Identifier identifier);
+
+	boolean hasIdentifier(String identifierName);
+
+	Optional<Identifier> getIdentifier(String identifierName);
 
 	void addLabel(Label label);
 

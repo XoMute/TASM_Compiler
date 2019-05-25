@@ -22,8 +22,9 @@ public class Compiler {
    * TODO list for tomorrow:
    *  - remember offset of label // DONE (?)
    *  - implement JBE // DONE
-   *  - figure out how to work with MOV (the hard and long one);
-   *  - implement MOV
+   *  - fix macro printing // DONE
+   *  - figure out how to work with MOV (the hard and long one) // DONE
+   *  - implement MOV // DONE
    *  - implement SBB (will be easy after MOV)
    *  - implement LSS (same)
    *  - chill;
@@ -102,7 +103,6 @@ public class Compiler {
     }
   }
 
-  @Deprecated
   private void startSegment(String line) {
     List<String> operands = StringUtils.splitByOperands(line);
     if (currentSegment == null) { // means it's first segment
@@ -113,9 +113,8 @@ public class Compiler {
     startedSegment = true;
   }
 
-  @Deprecated
   private void endSegment(String line) {
-    // todo: save current segment somewhere (or not??)
+    AssemblerHelper.saveSegment(currentSegment);
     startedSegment = false;
   }
 

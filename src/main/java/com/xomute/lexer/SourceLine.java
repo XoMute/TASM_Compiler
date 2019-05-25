@@ -117,37 +117,41 @@ public class SourceLine {
 
   public Optional<Mnemocode> getMnemocode() {
     if (mnemocodeIndex != -1 && mnemocode == null) {
-    	String strMnemocode = StringUtils.split(this.line).get(mnemocodeIndex);
-    	if (AssemblerHelper.isCommand(strMnemocode)) {
-				this.mnemocode = AssemblerHelper.getCommand(strMnemocode, this.line);
-	    } else if (AssemblerHelper.isDataIdentifier(strMnemocode)) {
+      String strMnemocode = StringUtils.split(this.line).get(mnemocodeIndex);
+      if (AssemblerHelper.isCommand(strMnemocode)) {
+        this.mnemocode = AssemblerHelper.getCommand(strMnemocode, this.line);
+      } else if (AssemblerHelper.isDataIdentifier(strMnemocode)) {
         this.mnemocode = AssemblerHelper.getDataIdentifier(strMnemocode, this.line);
-	    } else {
+      } else {
         this.mnemocode = AssemblerHelper.getDirective(strMnemocode);
-	    }
+      }
     }
     return Optional.ofNullable(this.mnemocode);
   }
 
-	public String getOffset() {
-		return offset;
-	}
+  public String getOffset() {
+    return offset;
+  }
 
-	public void setOffset(String offset) {
-		this.offset = offset;
-	}
+  public void setOffset(String offset) {
+    this.offset = offset;
+  }
 
-	public String getByteCode() {
+  public void setMnemocode(Mnemocode mnemocode) {
+    this.mnemocode = mnemocode;
+  }
+
+  public String getByteCode() {
     if (skipByCompiler) {
       return "";
     }
 
-		Optional<Mnemocode> opt = getMnemocode();
-		if (opt.isPresent()) {
-		  return opt.get().getCode();
+    Optional<Mnemocode> opt = getMnemocode();
+    if (opt.isPresent()) {
+      return opt.get().getCode();
     }
-		return "";
-	}
+    return "";
+  }
 
   public boolean isSkipByCompiler() {
     return skipByCompiler;

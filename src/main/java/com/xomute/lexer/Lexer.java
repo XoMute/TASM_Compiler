@@ -1,5 +1,6 @@
 package com.xomute.lexer;
 
+import com.xomute.compiler.commands.WrongCommand;
 import com.xomute.lexer.lexems.Macro;
 import com.xomute.lexer.segments.CodeSegment;
 import com.xomute.lexer.segments.DataSegment;
@@ -77,6 +78,11 @@ public class Lexer {
       return Collections.singletonList(srcLine);
     }
 
+    if (line.trim().equals("END")) {
+      srcLine.setSkipByCompiler(true);
+      return Collections.singletonList(srcLine);
+    }
+
     if (startedMacro) {
       srcLine.setSkipByCompiler(true);
       macro.addLine(srcLine);
@@ -87,6 +93,8 @@ public class Lexer {
 
     if (AssemblerHelper.isMacroCall(splittedLine.get(0))) {
       List<SourceLine> macroLines = new ArrayList<>();
+      srcLine.setSkipByCompiler(true);
+      macroLines.add(srcLine);
       String param = null;
       if (splittedLine.size() == 2) {
         param = splittedLine.get(1);
@@ -94,6 +102,10 @@ public class Lexer {
       macroLines.addAll(AssemblerHelper.callMacro(splittedLine.get(0), param));
       return macroLines;
     }
+//  if Tesla asks to process wrong commands - implement this lines below
+//    if (AssemblerHelper.isWrongCommand(splittedLine.get(0))) {
+//      srcLine.setMnemocode(new WrongCommand());
+//    }
 
     return Collections.singletonList(srcLine);
   }
