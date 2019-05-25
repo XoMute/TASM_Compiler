@@ -20,7 +20,6 @@ public class NOT implements Command {
       code = "F7 ";
     } else {
       code = "ERROR";
-      // todo: error
     }
     code += AssemblerHelper.getModRM("DX", operand);
   }

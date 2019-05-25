@@ -170,12 +170,11 @@ public class AssemblerHelper {
     } else if (isEffectiveAddress(rm)) {
       return "10";
     } else {
-      return "ERRORinGetMod"; // todo: fix
+      return "ERRORinGetMod";
     }
   }
 
   private static String getRm(String rm) {
-    // todo: write it to the end
     if (RM.get(rm) != null) {
       return RM.get(rm);
     } else {

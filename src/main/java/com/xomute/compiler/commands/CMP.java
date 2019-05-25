@@ -19,7 +19,6 @@ public class CMP implements Command {
 			code = "3B ";
 		} else {
 			code = "ERROR";
-			// todo: error
 		}
 		code += AssemblerHelper.getModRM(operand1, operand2);
 	}

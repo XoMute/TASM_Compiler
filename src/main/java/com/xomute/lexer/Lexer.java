@@ -46,10 +46,6 @@ public class Lexer {
                           })
                       .collect(Collectors.toList());
               linesOfSrc.addAll(srcLines);
-              //	            linesOfSrc.add(
-              //                  new SourceLine(
-              //                      line)); // todo: remove lines with mistakes or add boolean
-              // field to SourceLine
             });
   }
 

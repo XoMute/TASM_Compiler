@@ -18,18 +18,6 @@ import java.util.Optional;
 
 public class Compiler {
 
-  /**
-   * TODO list for tomorrow:
-   *  - remember offset of label // DONE (?)
-   *  - implement JBE // DONE
-   *  - fix macro printing // DONE
-   *  - figure out how to work with MOV (the hard and long one) // DONE
-   *  - implement MOV // DONE
-   *  - implement SBB (will be easy after MOV)
-   *  - implement LSS (same)
-   *  - chill;
-   */
-
   private static Segment currentSegment;
   private boolean startedSegment;
 
@@ -142,7 +130,6 @@ public class Compiler {
         continue;
       }
       Mnemocode mnemocode = opt.get();
-      // todo: update line offset if needed (in case of MOV, maybe)
       mnemocode.updateCode();
     }
   }
