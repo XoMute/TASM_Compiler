@@ -12,6 +12,7 @@ import com.xomute.utils.StringConstants;
 import com.xomute.utils.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +34,9 @@ public class Compiler {
     compile(srcLines);
     int i = 1;
     for (SourceLine srcLine : srcLines) {
-      System.out.println(String.format("%3d\t", i++) + convertToLSTString(srcLine));
+      for(String line : convertToLSTString(srcLine)) {
+        System.out.println(String.format("%3d\t", i++) + line);
+      }
     }
   }
 
@@ -41,8 +44,6 @@ public class Compiler {
     firstGoThrough(srcLines);
     secondGoThrough();
   }
-
-
 
   ///////////////// FIRST GO THROUGH ////////////////////////
 
@@ -138,8 +139,8 @@ public class Compiler {
 
   ///////////////////////////////////// PRINTING /////////////////////////////////////
 
-  private String convertToLSTString(SourceLine srcLine) {
-    StringBuilder line = new StringBuilder();
+  private List<String> convertToLSTString(SourceLine srcLine) {
+    StringBuilder line;
     String code = srcLine.getByteCode();
     // this if is created only for beautifying string constant bytecode
     if (code != null && code.split(" ").length > 7) {
@@ -149,31 +150,33 @@ public class Compiler {
       if (!srcLine.isSkipByCompiler()) {
         offset = srcLine.getOffset();
       }
-      line = new StringBuilder(String.format("\t%4s\t %-16s\t %s", offset, code, srcLine.getLine()));
+      line =
+          new StringBuilder(String.format("\t%4s\t %-16s\t %s", offset, code, srcLine.getLine()));
     }
-    return line.toString();
+    return Collections.singletonList(line.toString());
   }
 
-  private String beautifyStringConstant(SourceLine srcLine) {
-    StringBuilder line = new StringBuilder();
+  private List<String> beautifyStringConstant(SourceLine srcLine) {
+    List<String> lines = new ArrayList<>();
     String code = srcLine.getByteCode();
     String tmpCode = code.substring(0, 3 * 7 - 1) + "+";
-    line =
-        new StringBuilder(
-            String.format("\t%4s\t %s\t %s", srcLine.getOffset(), tmpCode, srcLine.getLine()));
+    lines.add(String.format("\t%4s\t %s\t %s", srcLine.getOffset(), tmpCode, srcLine.getLine()));
     int i = 1;
     do {
-      tmpCode = code.substring(constrain(3 * 7 * i, -1, code.length()), constrain(3 * 7 * (i + 1) - 1, 0, code.length()));
+      tmpCode =
+          code.substring(
+              constrain(3 * 7 * i, -1, code.length()),
+              constrain(3 * 7 * (i + 1) - 1, 0, code.length()));
       if (tmpCode.length() == 3 * 7 - 1) {
         tmpCode += "+";
       }
-      line.append(String.format("\n\t\t\t\t%s", tmpCode));
+      lines.add(String.format("\t\t\t\t%s", tmpCode));
       i++;
     } while (!tmpCode.isEmpty());
-    return line.toString();
+    return lines;
   }
 
-  private int constrain(int n, int a, int b){
+  private int constrain(int n, int a, int b) {
     if (n < a) return a;
     if (n > b) return b;
     return n;
