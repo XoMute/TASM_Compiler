@@ -1,6 +1,5 @@
 package com.xomute.lexer.segments;
 
-import com.sun.istack.internal.Nullable;
 import com.xomute.lexer.lexems.Identifier;
 import com.xomute.lexer.lexems.Label;
 import com.xomute.utils.StringConstants;
@@ -28,7 +27,7 @@ public class DataSegment implements Segment{
 	public String getName() {
 		return name;
 	}
-
+	
 	@Override
 	public void addIdentifier(Identifier identifier) {
 		userIdentifiers.add(identifier);

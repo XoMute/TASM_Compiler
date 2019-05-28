@@ -13,7 +13,6 @@ public class CompilerUtils {
     return strOffset.toString().toUpperCase();
   }
 
-  @Deprecated
   public static boolean isJumpBack(String label) {
     return !Compiler.getCurrentSegment()
         .getLabelOffset(label)
